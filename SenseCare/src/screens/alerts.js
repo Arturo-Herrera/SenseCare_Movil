@@ -1,5 +1,4 @@
-//Necessary imports
-import React, { useEffect, useState } from "react";
+import { useState, useContext, useCallback } from "react";
 import {
   SafeAreaView,
   Text,
@@ -8,32 +7,69 @@ import {
   ActivityIndicator,
   View,
 } from "react-native";
-
-//Components imports
+import { useFocusEffect } from "@react-navigation/native";
 import AlertCard from "../components/alertCard";
+import { AuthContext } from "../context/authContext";
 
-// AlertsScreen component
-//* This component fetches and shows the alerts from the API
 export default function AlertsScreen() {
+  const { user } = useContext(AuthContext);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-        //! This URL to the api has to send the watch ID
-        const res = await fetch("https://apiURL.com/api/alerts");
-        const data = await res.json();
-        setAlerts(data);
-      } catch {
-        setError("Failed loading alerts");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+      const fetchAlerts = async () => {
+        try {
+          const res = await fetch(
+            `http://192.168.1.72:5221/api/Alerts/getByPatient/${user.id}`
+          );
+
+          if (!res.ok) throw new Error("Network response was not ok");
+
+          const jsonResponse = await res.json();
+          console.log("Respuesta completa:", jsonResponse);
+
+          if (isMounted) {
+            setAlerts(jsonResponse);
+            setError(null);
+          }
+        } catch (err) {
+          console.error(err);
+          isMounted && setError("Failed loading alerts");
+        } finally {
+          isMounted && setLoading(false);
+        }
+      };
+
+      fetchAlerts();
+      const interval = setInterval(fetchAlerts, 10000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+      };
+    }, [user])
+  );
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 60) {
+      return `${diffMins} mins ago`;
+    } else if (diffMins < 1440) {
+      const hours = Math.floor(diffMins / 60);
+      const mins = diffMins % 60;
+      return `${hours}h ${mins}m ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,11 +92,21 @@ export default function AlertsScreen() {
       {!loading && !error && (
         <FlatList
           data={alerts}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <AlertCard name={item._id} description={item.description} />
-          )}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => {
+            let type = item.idTipoAlerta === "SOS" ? "sos" : "warning";
+            const formattedDate = formatDate(item.fecha);
+
+            return (
+              <AlertCard
+                type={type}
+                signo={item.signoAfectado}
+                fecha={formattedDate}
+              />
+            );
+          }}
           contentContainerStyle={{ paddingVertical: 16 }}
+          style={styles.flatList}
         />
       )}
     </SafeAreaView>
@@ -70,7 +116,6 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     backgroundColor: "#fff",
   },
   title: {
@@ -78,10 +123,16 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: "bold",
     color: "#44749D",
+    textAlign: "center",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  flatList: {
+    flexGrow: 1,
+    paddingHorizontal: 10,
+    marginBottom: 70,
   },
 });

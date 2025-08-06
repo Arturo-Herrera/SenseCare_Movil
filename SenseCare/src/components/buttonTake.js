@@ -20,7 +20,11 @@ const RADIUS_CLOSED = 20,
 
 //? Checkup button component
 //* This component is used to start a manual checkup of vital signs.
-export default function StartCheckupButton({ requestVitalSigns, onFinished }) {
+export default function StartCheckupButton({
+  requestVitalSigns,
+  onFinished,
+  onStartRequest,
+}) {
   const [phase, setPhase] = useState("default"); //! There are three phases: default, wait, and done
   const shape = useRef(new Animated.Value(0)).current;
   const blink = useRef(new Animated.Value(1)).current;
@@ -90,6 +94,8 @@ export default function StartCheckupButton({ requestVitalSigns, onFinished }) {
   //! It will animate the button, request the vital signs, and then animate it back to the default state.
   const handlePress = () => {
     if (phase === "default") {
+      onStartRequest?.(); // <-- LLAMA A LA FUNCIÓN AL INICIO
+
       Animated.timing(shape, {
         toValue: 1,
         duration: 600,

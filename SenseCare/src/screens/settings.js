@@ -32,10 +32,6 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Settings</Text>
       <View style={styles.content}>
-        <TouchableOpacity style={styles.buttons}>
-          <Ionicons name="watch" size={30} color="#44749D" />
-          <Text style={styles.buttonText}>Pair device</Text>
-        </TouchableOpacity>
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => setShowModal(true)}
@@ -91,6 +87,7 @@ const styles = StyleSheet.create({
   },
   content: {
     marginTop: 71,
+    gap: 20,
   },
   logoutButton: {
     backgroundColor: "#FFC2C2",

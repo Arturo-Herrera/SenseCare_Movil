@@ -10,20 +10,17 @@ import LoginScreen from "./src/screens/login";
 
 const Stack = createNativeStackNavigator();
 
-//*We create the main navigator whether the app will redirect the user to Login Screen or the Main Screen
 function RootNavigator() {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) return null; // aquí pondrás tu splash animado
+  if (loading) return null; 
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown:false }}>
         {user ? (
-          // --- Sesión iniciada → pestañas ---
           <Stack.Screen name="Main" component={AppTabs} />
         ) : (
-          // --- Sin sesión → login ---
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
       </Stack.Navigator>
